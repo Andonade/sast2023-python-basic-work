@@ -1,14 +1,14 @@
 import argparse
 import json
+import streamlit as sl
 
 def parser_data():
     """
     从命令行读取用户参数
     做出如下约定：
     1. -f 为必选参数，表示输入题库文件
-    ...
-
-    :return: 参数
+    2. -d 为必选参数，表示是否指定文章
+    3. -t 当-d True为必选参数，表示指定文章的标题
     """
     parser = argparse.ArgumentParser(
         prog="Word filling game",
@@ -16,7 +16,9 @@ def parser_data():
         allow_abbrev=True
     )
 
-    parser.add_argument("-f", "--file", help="题库文件", required=True)
+    parser.add_argument("-f", "--file", help="题库文件", type=str, required=True)
+    parser.add_argument("-d", "--designate", help="是否指定文章", type=bool, required=True)
+    parser.add_argument("-t", "--title", help="指定文章的标题", type=str)
     # TODO: 添加更多参数
     
     args = parser.parse_args()
