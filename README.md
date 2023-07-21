@@ -9,7 +9,6 @@
 约定以下参数：
 
 ```
-
 --file  -f  接文章的路径
 --designate -d 接"True"或者"False"，表示是否指定文章
 --title -t 接指定文章的标题，-d参数为True时必须使用
