@@ -61,34 +61,33 @@ if __name__ == "__main__":
     if mode == '做题模式':
         file = st.text_input('请输入题库文件名', value='example.json')
         try:
-            open(file, 'r')
-        except FileNotFoundError as err:
-            st.text(err)
-        isDesignated = st.checkbox('是否指定文章', value=True)
-        data = read_articles(file)
-        if not (data.get('articles', 0) != 0 and data.get('language', 0)):
-            st.text('题库文件格式有误，可自行更改或更换一个题库文件')
-        elif not data['articles']:
-            st.text('题库中无文章，可选择出题模式进行出题或更换一个题库文件')
-        else:
-            articles = data["articles"]
-            title = ''
-            flag = -1
-            if isDesignated:
-                titles = []
-                for i in range(len(articles)):
-                    titles.append(articles[i]['title'])
-                title = st.selectbox('请指定您想要的文章', options=titles)
-                flag = titles.index(title)
+            data = read_articles(file)
+            if not (data.get('articles', 0) != 0 and data.get('language', 0)):
+                st.text('题库文件格式有误，可自行更改或更换一个题库文件')
+            elif not data['articles']:
+                st.text('题库中无文章，可选择出题模式进行出题或更换一个题库文件')
             else:
-                flag = random.choice(range(len(articles)))
-                title = articles[flag]['title']
-                st.text(f'您随机到了《{title}》这篇文章')
-            article = articles[flag]['article']
-            keys = get_inputs(articles[flag]['hints'])
-            if st.button('确定'):
-                article = replace(article, keys)
-                st.write('替换结果：', article)
+                isDesignated = st.checkbox('是否指定文章', value=True)
+                articles = data["articles"]
+                title = ''
+                flag = -1
+                if isDesignated:
+                    titles = []
+                    for i in range(len(articles)):
+                        titles.append(articles[i]['title'])
+                    title = st.selectbox('请指定您想要的文章', options=titles)
+                    flag = titles.index(title)
+                else:
+                    flag = random.choice(range(len(articles)))
+                    title = articles[flag]['title']
+                    st.text(f'您随机到了《{title}》这篇文章')
+                article = articles[flag]['article']
+                keys = get_inputs(articles[flag]['hints'])
+                if st.button('完成'):
+                    article = replace(article, keys)
+                    st.write('替换结果：', article)
+        except FileNotFoundError:
+            st.text('题库文件不存在')
     else:
         file = st.text_input('请输入要保存到的题库文件名', value='example.json', help='若文件不存在则将新建')
         title = st.text_input('请输入文章标题')
