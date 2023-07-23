@@ -1,28 +1,7 @@
-import argparse
 import json
-import sys
 import random
 import re
-
-
-def parser_data():
-    """
-    从命令行读取用户参数
-    做出如下约定：
-    1. -f 为必选参数，表示输入题库文件
-    2. -d 为必选参数，表示是否指定文章
-    3. -t 当-d True时为必选参数，表示指定文章的标题
-    """
-    parser = argparse.ArgumentParser(
-        prog="Word filling game",
-        description="A simple game",
-        allow_abbrev=True
-    )
-    parser.add_argument("-f", "--file", help="题库文件", required=True)
-    parser.add_argument("-d", "--designate", help="是否指定文章", required=True)
-    parser.add_argument("-t", "--title", help="指定文章的标题")
-    args = parser.parse_args()
-    return args
+import streamlit as st
 
 
 def read_articles(filename):
@@ -39,16 +18,13 @@ def read_articles(filename):
 def get_inputs(hints):
     """
     获取用户输入
-
     :param hints: 提示信息
-
     :return: 用户输入的单词
     """
     keys = []
     for hint in hints:
-        print(f"请输入{hint}：")
-        temp = input()
-        keys.append(temp)
+        key = st.text_input(f'提示：{hint}')
+        keys.append(key)
     return keys
 
 
@@ -68,22 +44,71 @@ def replace(article, keys):
     return article
 
 
+def get_hints(num):
+    hints = []
+    for i in range(num):
+        hint = st.text_input(f'请输入第{i + 1}个提示')
+        hints.append(hint)
+    return hints
+
+
 if __name__ == "__main__":
-    args = parser_data()
-    data = read_articles(args.file)
-    articles = data["articles"]
-    flag = -1
-    if args.designate == 'True':
-        for i in range(len(articles)):
-            if articles[i]["title"] == args.title:
-                flag = i
-                break
-        if flag == -1:
-            print(f"{args.title} not found")
-            sys.exit()
+    st.title('文章填词小游戏')
+    st.sidebar.header('Made by Andonade')
+    st.sidebar.markdown('什么都还没有的[github](https://github.com/Andonade)')
+    st.sidebar.markdown('[仓库地址](https://github.com/Andonade/sast2023-python-basic-work.git)')
+    mode = st.selectbox('选择游戏模式', options=['做题模式', '出题模式'])
+    if mode == '做题模式':
+        file = st.text_input('请输入题库文件名', value='example.json')
+        try:
+            open(file, 'r')
+        except FileNotFoundError as err:
+            st.text(err)
+        isDesignated = st.checkbox('是否指定文章')
+        data = read_articles(file)
+        if not (data.get('articles', 0) != 0 and data.get('language', 0)):
+            st.text('题库文件格式有误，可自行更改或更换一个题库文件')
+        elif not data['articles']:
+            st.text('题库中无文章，可选择出题模式进行出题或更换一个题库文件')
+        else:
+            articles = data["articles"]
+            title = ''
+            flag = -1
+            if isDesignated:
+                titles = []
+                for i in range(len(articles)):
+                    titles.append(articles[i]['title'])
+                title = st.selectbox('请指定您想要的文章', options=titles)
+                flag = titles.index(title)
+            else:
+                flag = random.choice(range(len(articles)))
+                title = articles[flag]['title']
+                st.text(f'您随机到了《{title}》这篇文章')
+            article = articles[flag]['article']
+            keys = get_inputs(articles[flag]['hints'])
+            if st.button('确定'):
+                article = replace(article, keys)
+                st.write('替换结果：', article)
     else:
-        flag = random.choice(range(len(articles)))
-        print(f"您抽中了《{articles[flag]['title']}》")
-    keys = get_inputs(articles[flag]["hints"])
-    print("替换结果如下")
-    print(replace(articles[flag]["article"], keys))
+        file = st.text_input('请输入要保存到的题库文件名', value='example.json', help='若文件不存在则将新建')
+        title = st.text_input('请输入文章标题')
+        article = st.text_area('请输入文章正文', help='挖空请按照{{1}}格式，多个挖空请按照{{1}}、{{2}}、{{3}}……的顺序')
+        pattern = re.compile(r'{{(\d+)}}')
+        substrings = pattern.findall(article)
+        if substrings:
+            num = max(int(match) for match in substrings)
+            st.text(f'发现了{num}个挖空')
+            hints = get_hints(num)
+            if st.button('完成'):
+                dict_temp = {'title': title, 'article': article, 'hints': hints}
+                try:
+                    with open(file, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    data['articles'].append(dict_temp)
+                    with open(file, "w") as f:
+                        json.dump(data, f, ensure_ascii=False)
+                except FileNotFoundError:
+                    with open(file, "x") as f:
+                        articles = [dict_temp]
+                        dict = {'language': 'zh', 'articles': articles}
+                        json.dump(dict, f, ensure_ascii=False)
