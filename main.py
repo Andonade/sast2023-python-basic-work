@@ -22,8 +22,8 @@ def get_inputs(hints):
     :return: 用户输入的单词
     """
     keys = []
-    for hint in hints:
-        key = st.text_input(f'提示：{hint}')
+    for i in range(len(hints)):
+        key = st.text_input(f'提示{i + 1}：{hints[i]}')
         keys.append(key)
     return keys
 
@@ -64,7 +64,7 @@ if __name__ == "__main__":
             open(file, 'r')
         except FileNotFoundError as err:
             st.text(err)
-        isDesignated = st.checkbox('是否指定文章')
+        isDesignated = st.checkbox('是否指定文章', value=True)
         data = read_articles(file)
         if not (data.get('articles', 0) != 0 and data.get('language', 0)):
             st.text('题库文件格式有误，可自行更改或更换一个题库文件')
