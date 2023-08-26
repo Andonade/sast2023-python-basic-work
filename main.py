@@ -36,11 +36,7 @@ def replace(article, keys):
     :return: 替换后的文章内容
     """
     pattern = r'{{(\d+)}}'
-
-    def regrex_replace(match):
-        index = int(match.group(1)) - 1
-        return keys[index]
-    article = re.sub(pattern, regrex_replace, article)
+    article = re.sub(pattern, lambda match: keys[int(match.group(1)) - 1], article)
     return article
 
 
