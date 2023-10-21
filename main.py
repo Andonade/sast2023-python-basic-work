@@ -41,6 +41,11 @@ def replace(article, keys):
 
 
 def get_hints(num):
+    """
+    获取用户输入的提示信息
+    :param num: 提示的数量
+    :return: 提示信息的列表
+    """
     hints = []
     for i in range(num):
         hint = st.text_input(f'请输入第{i + 1}个提示')
